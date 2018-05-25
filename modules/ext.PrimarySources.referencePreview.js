@@ -5,7 +5,19 @@
 		openNav: function openNav(
 			itemLabel, propertyLabel, propertyValue, referenceURL, buttons
 		) {
-			var blackboard = $( '#blackboard' );
+			var originalURL,
+				blackboard = $( '#blackboard' );
+
+			// Hack for British Museum URLs that would otherwise lead to a 404
+			// Previous: http://collection.britishmuseum.org/id/person-institution/139818
+			// Current: https://collection.britishmuseum.org/resource/?uri={{PREVIOUS}}
+			if ( referenceURL.startsWith( 'https://collection.britishmuseum.org/resource/' ) ) {
+				originalURL = referenceURL;
+				referenceURL = decodeURIComponent(
+					new URL( referenceURL ).search
+						.split( '=' )[ 1 ]
+				);
+			}
 
 			console.debug( 'Reference preview buttons passed:', buttons );
 
@@ -23,6 +35,10 @@
 					$( '.loader' ).remove();
 					if ( msg !== 'no preview' ) {
 						data = JSON.parse( msg );
+						// Hack for British Museum URLs
+						if ( originalURL ) {
+							data.url = originalURL;
+						}
 						regEx = new RegExp(
 							'(' + itemLabel + '|' + propertyLabel + '|' + propertyValue + ')' +
 							'(?!([^<]+)?>)',
