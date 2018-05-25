@@ -5,18 +5,30 @@
 		openNav: function openNav(
 			itemLabel, propertyLabel, propertyValue, referenceURL, buttons
 		) {
-			var originalURL,
+			var originalURL, convertedURL,
 				blackboard = $( '#blackboard' );
 
-			// Hack for British Museum URLs that would otherwise lead to a 404
-			// Previous: http://collection.britishmuseum.org/id/person-institution/139818
-			// Current: https://collection.britishmuseum.org/resource/?uri={{PREVIOUS}}
+			// Updates to URLs that would otherwise lead to a 404
+			// The index in ps.globals.API_ENDPOINTS.PREVIEW_SERVICE has the previous ones
 			if ( referenceURL.startsWith( 'https://collection.britishmuseum.org/resource/' ) ) {
+				// British Museum
+				// Indexed: http://collection.britishmuseum.org/id/person-institution/139818
+				// Current: https://collection.britishmuseum.org/resource/?uri={{INDEXED}}
 				originalURL = referenceURL;
 				referenceURL = decodeURIComponent(
 					new URL( referenceURL ).search
 						.split( '=' )[ 1 ]
 				);
+			} else if ( referenceURL.startsWith( 'http://arthistorians.info/' ) ) {
+				// Dictionary of Art Historians
+				// Indexed: https://dictionaryofarthistorians.org/giovannonig.html
+				// Current: http://arthistorians.info/giovannonig
+				originalURL = referenceURL;
+				convertedURL = new URL( referenceURL );
+				convertedURL.protocol = 'https:';
+				convertedURL.host = 'dictionaryofarthistorians.org';
+				convertedURL.pathname = convertedURL.pathname + '.html';
+				referenceURL = convertedURL.toString();
 			}
 
 			console.debug( 'Reference preview buttons passed:', buttons );
@@ -35,7 +47,7 @@
 					$( '.loader' ).remove();
 					if ( msg !== 'no preview' ) {
 						data = JSON.parse( msg );
-						// Hack for British Museum URLs
+						// Hack for updated URLs
 						if ( originalURL ) {
 							data.url = originalURL;
 						}
